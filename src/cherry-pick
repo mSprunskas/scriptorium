@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+# Function to cherry-pick a commit into a target branch
+cherry_pick_commit() {
+  local target_branch=$1
+  local commit_hash=$2
+
+  echo "Switching to branch: $target_branch"
+  git checkout $target_branch
+
+  echo "Pulling latest changes for $target_branch"
+  git pull origin $target_branch
+
+  echo "Cherry-picking commit $commit_hash from origin/master into $target_branch"
+  git cherry-pick $commit_hash || {
+    echo "Cherry-pick conflict detected. Please resolve conflicts manually."
+    exit 1
+  }
+
+  echo "Pushing updated $target_branch to origin"
+  git push origin $target_branch
+}
+
+# Fetch latest changes from remote
+echo "Fetching latest changes from remote"
+git fetch origin
+
+# Get the currently selected remote branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if [[ -z "$current_branch" ]]; then
+  echo "Error: Unable to determine the current branch."
+  exit 1
+fi
+
+echo "Current branch detected: $current_branch"
+
+# Display the latest commits in origin/master for reference
+echo "Latest commits in origin/master:"
+git log --oneline origin/master -n 20
+
+# Ask for the commit hash
+read -p "Enter the commit hash to cherry-pick from origin/master: " commit_hash
+
+# Validate the commit exists in origin/master
+if ! git branch -r --contains $commit_hash | grep -q "origin/master"; then
+  echo "Error: Commit $commit_hash does not exist in origin/master."
+  exit 1
+fi
+
+# Cherry-pick into the currently selected branch
+cherry_pick_commit "$current_branch" $commit_hash
+
+echo "Cherry-pick operation completed successfully!"
+

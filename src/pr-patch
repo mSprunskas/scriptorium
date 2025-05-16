@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Prompt the user for the PR number
+read -p "Enter the pull request number: " PR_NUMBER
+
+git checkout master && git pull
+
+# Create and checkout a temporary branch
+git branch PR && git checkout PR
+
+# Pull the PR changes
+git pull origin pull/$PR_NUMBER/head --no-commit
+
+git checkout master
+git diff master PR > 00.diff
+git branch -D PR
+git apply 00.diff
+rm 00.diff
+
+echo "Patch applied successfully."

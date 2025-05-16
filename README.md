@@ -1,2 +1,3 @@
-# scriptorium
-Collection of various usefull scripts
+# Scriptorium
+
+Collection of various useful scripts
