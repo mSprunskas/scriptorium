@@ -17,4 +17,4 @@ git fetch origin "$BRANCH"
 
 # Apply the patch (diff) from the remote branch without committing
 BASE=$(git merge-base origin/master origin/"$BRANCH")
-git diff "$BASE"..origin/"$BRANCH" | git apply
+git diff "$BASE"..origin/"$BRANCH" | git apply --index
