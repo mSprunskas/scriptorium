@@ -8,13 +8,13 @@ fi
 
 BRANCH="$1"
 
-# Checkout and update master
+echo "Checking out and updating master..."
 git checkout master
 git pull
 
-# Fetch the remote branch
+echo "Fetching the remote branch..."
 git fetch origin "$BRANCH"
 
-# Apply the patch (diff) from the remote branch without committing
+echo "Applying patch..."
 BASE=$(git merge-base origin/master origin/"$BRANCH")
-git diff "$BASE"..origin/"$BRANCH" | git apply --index
+git diff --binary "$BASE"..origin/"$BRANCH" | git apply --index
