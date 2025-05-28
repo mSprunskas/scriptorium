@@ -1,20 +1,31 @@
 #!/bin/bash
 
-# Prompt the user for the PR number
-read -p "Enter the pull request number: " PR_NUMBER
+# Check if a PR number was provided
+if [ -z "$1" ]; then
+  echo "Usage: $0 <pull-request-number>"
+  exit 1
+fi
 
-git checkout master && git pull
+PR_NUMBER="$1"
+PR_BRANCH="pr-$PR_NUMBER"
 
-# Create and checkout a temporary branch
-git branch PR && git checkout PR
-
-# Pull the PR changes
-git pull origin pull/$PR_NUMBER/head --no-commit
-
+echo "Checking out and updating master..."
 git checkout master
-git diff master PR > 00.diff
-git branch -D PR
-git apply 00.diff
-rm 00.diff
+git pull
 
-echo "Patch applied successfully."
+echo "Fetching pull request #$PR_NUMBER into local branch '$PR_BRANCH'..."
+git fetch origin pull/"$PR_NUMBER"/head:"$PR_BRANCH"
+
+echo "Checking for PR branch: $PR_BRANCH..."
+if ! git show-ref --quiet refs/heads/"$PR_BRANCH"; then
+  echo "Error: Failed to create local branch '$PR_BRANCH'."
+  exit 1
+fi
+
+echo "Computing base commit between 'master' and '$PR_BRANCH'..."
+BASE=$(git merge-base master "$PR_BRANCH")
+
+echo "Creating and applying patch from $BASE to $PR_BRANCH..."
+git diff --binary "$BASE".."$PR_BRANCH" | git apply --index
+
+echo "Patch from PR #$PR_NUMBER applied successfully."
