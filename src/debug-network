@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Script depends on tmux
+
+ROUTER_IP=$(ip route | grep default | awk '{print $3}')
+
+tmux new-session \; \
+  send-keys 'ping 8.8.8.8' C-m \; \
+  split-window -h \; \
+  send-keys 'ping google.com' C-m \; \
+  split-window -h \; \
+  send-keys "ping $ROUTER_IP" C-m \; \
+  select-layout even-horizontal
