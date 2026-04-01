@@ -17,4 +17,14 @@ git fetch origin "$BRANCH"
 
 echo "Applying patch..."
 BASE=$(git merge-base origin/master origin/"$BRANCH")
-git diff --binary "$BASE"..origin/"$BRANCH" | git apply --index
+if ! git diff --binary "$BASE"..origin/"$BRANCH" | git apply --index --3way --verbose; then
+  echo ""
+  echo "ERROR: Failed to apply patch for branch '$BRANCH'"
+  echo "Merge base: $BASE"
+  echo ""
+  echo "Files that failed to apply:"
+  git diff --binary "$BASE"..origin/"$BRANCH" | git apply --check 2>&1 | grep "^error:" || true
+  echo ""
+  echo "This usually means the target files have diverged. You may need to resolve conflicts manually."
+  exit 1
+fi
